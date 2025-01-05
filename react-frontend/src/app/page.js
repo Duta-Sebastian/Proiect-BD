@@ -1,11 +1,10 @@
-import Link from "next/link";
+import TopMenu from './menu/TopMenu';
 
 export default function Home() {
     return (
-        <div>
+        <div style={{ margin: "20px" }}>
+            <TopMenu/>
             <h1>Welcome to the Home Page</h1>
-            {/* Use Link without an anchor tag */}
-            <Link href="/api-results">Go to API Results Page</Link>
         </div>
     );
 }

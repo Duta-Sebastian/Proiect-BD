@@ -1,8 +1,10 @@
-"use client"; // Add this for React Server Components, if you're using Next.js or similar
+"use client";
 
 import React, { useState, useEffect } from "react";
+import TopMenu from "@/app/menu/TopMenu";
+import config from "@/app/config/config";
 
-export default function ApiResultsPage() {
+export default function LMDTablesPage() {
   const [tables, setTables] = useState([]);
   const [selectedTable, setSelectedTable] = useState("");
   const [columns, setColumns] = useState([]);
@@ -22,7 +24,7 @@ export default function ApiResultsPage() {
   useEffect(() => {
     const fetchTableNames = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/tables/getTableNames");
+        const response = await fetch(`${config.DOCKER_API_BASE_URL}/tables/getTableNames`);
         if (!response.ok) {
           const errorMessage = await response.text();
           throw new Error(`Failed to fetch table names: ${errorMessage}`);
@@ -60,7 +62,7 @@ export default function ApiResultsPage() {
     const fetchTableColumns = async () => {
       try {
         const response = await fetch(
-          `http://127.0.0.1:5000/api/tables/getTableColumns?table_name=${selectedTable}`
+          `${config.DOCKER_API_BASE_URL}/tables/getTableColumns?table_name=${selectedTable}`
         );
         if (!response.ok) {
           const errorMessage = await response.text();
@@ -84,8 +86,8 @@ export default function ApiResultsPage() {
     const fetchTableData = async () => {
       try {
         const url = selectedColumn
-          ? `http://127.0.0.1:5000/api/tables/getTableData?table_name=${selectedTable}&order_by=${selectedColumn}&sort_order=${sortOrder}`
-          : `http://127.0.0.1:5000/api/tables/getTableData?table_name=${selectedTable}`;
+          ? `${config.DOCKER_API_BASE_URL}/tables/getTableData?table_name=${selectedTable}&order_by=${selectedColumn}&sort_order=${sortOrder}`
+          : `${config.DOCKER_API_BASE_URL}/tables/getTableData?table_name=${selectedTable}`;
 
         const response = await fetch(url);
         if (!response.ok) {
@@ -165,7 +167,7 @@ export default function ApiResultsPage() {
       setUpdateSuccessful(true);
       setDeleteSuccessful(true);
       if (deletedRows.length > 0) {
-        const deleteResponse = await fetch(`http://127.0.0.1:5000/api/tables/deleteRows`, {
+        const deleteResponse = await fetch(`${config.DOCKER_API_BASE_URL}/tables/deleteRows`, {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
@@ -183,7 +185,7 @@ export default function ApiResultsPage() {
       }
 
       if (changes.length > 0) {
-        const updateResponse = await fetch(`http://127.0.0.1:5000/api/tables/updateTableData`, {
+        const updateResponse = await fetch(`${config.DOCKER_API_BASE_URL}/tables/updateTableData`, {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({
@@ -202,7 +204,7 @@ export default function ApiResultsPage() {
       if (updateSuccessful && deleteSuccessful) alert("Changes saved successfully!");
 
       const fetchUpdatedDataResponse = await fetch(
-          `http://127.0.0.1:5000/api/tables/getTableData?table_name=${selectedTable}`
+          `${config.DOCKER_API_BASE_URL}/tables/getTableData?table_name=${selectedTable}`
       );
       const updatedData = await fetchUpdatedDataResponse.json();
       if (fetchUpdatedDataResponse.ok) {
@@ -221,6 +223,7 @@ export default function ApiResultsPage() {
 
   return (
     <div style={{ margin: "20px" }}>
+      <TopMenu />
       <h2>API Results</h2>
       <select
         value={selectedTable}

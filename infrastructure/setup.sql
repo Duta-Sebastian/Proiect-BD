@@ -1,0 +1,3 @@
+CREATE USER C##proiect IDENTIFIED BY proiectbd;
+GRANT CONNECT, RESOURCE TO C##proiect;
+GRANT DBA TO C##proiect;

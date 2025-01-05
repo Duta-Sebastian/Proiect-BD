@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
 
+from services.helper import map_rows_to_dict
+
 tables_bp = Blueprint('tables', __name__)
 
 def get_columns_for_table(table_name):
@@ -15,18 +17,14 @@ def get_columns_for_table(table_name):
     rows = cursor.fetchall()
     cursor.close()
 
-    # Return the column names
     return [row[0] for row in rows]
-
-def map_rows_to_dict(columns, rows):
-    return [{columns[i]: row[i] for i in range(len(columns))} for row in rows]
 
 @tables_bp.route('/api/tables/getTableNames', methods=['GET'])
 def get_table_names():
     connection = tables_bp.connection
     cursor = connection.cursor()
 
-    query = "SELECT table_name FROM user_tables"
+    query = "SELECT table_name FROM user_tables ORDER BY table_name"
     cursor.execute(query)
     rows = cursor.fetchall()
     cursor.close()
@@ -43,9 +41,16 @@ def get_table_columns():
     pk_query = f"SELECT acc.COLUMN_NAME FROM ALL_CONSTRAINTS ac JOIN ALL_CONS_COLUMNS acc ON ac.CONSTRAINT_NAME = acc.CONSTRAINT_NAME WHERE ac.TABLE_NAME = '{table_name}' AND ac.CONSTRAINT_TYPE = 'P'"
     connection = tables_bp.connection
     cursor = connection.cursor()
-    cursor.execute(pk_query)
-    rows = cursor.fetchall()
-    cursor.close()
+    try:
+        cursor.execute(pk_query)
+        rows = cursor.fetchall()
+    except Exception as e:
+        return jsonify({"error": f"Failed to execute query: {str(e)}"}), 500
+    finally:
+        cursor.close()
+
+    if not rows:
+        return jsonify({"error": "No data found"}), 404
 
     return jsonify({'coloane': columns, 'pk':rows[0][0]}), 200
 
@@ -61,7 +66,7 @@ def get_table_data():
                            'EDITURA', 'CATEGORIE', 'RECENZIE', 'CARTE_CITITOR_RECENZIE']
 
     if table_name not in allowed_table_names:
-        return jsonify({"error": "Invalid order_by parameter"}), 400
+        return jsonify({"error": "Invalid table_name parameter"}), 400
 
     allowed_table_order_by_columns = get_columns_for_table(table_name)
 
@@ -79,9 +84,17 @@ def get_table_data():
     query = f"Select * from {table_name}"
     if table_order_by_column:
         query += f" ORDER BY {table_order_by_column} {table_sort_order}"
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    cursor.close()
+
+    try:
+        cursor.execute(query)
+        rows = cursor.fetchall()
+    except Exception as e:
+        return jsonify({"error": f"Failed to execute query: {str(e)}"}), 500
+    finally:
+        cursor.close()
+
+    if not rows:
+        return jsonify({"error": "No data found"}), 404
 
     mapped_data = map_rows_to_dict(allowed_table_order_by_columns, rows)
 
