@@ -1,0 +1,73 @@
+services:
+  backend:
+    build:
+      context: ../
+      dockerfile: infrastructure/Python.Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_APP: app.py
+      FLASK_ENV: production
+      DB_HOSTNAME: oracle-db
+    volumes:
+      - backend-data:/app
+    networks:
+      - app-network
+    depends_on:
+      - oracle-db
+
+  frontend:
+    build:
+      context: ../
+      dockerfile: infrastructure/React.Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+    volumes:
+      - frontend-data:/usr/src/app
+    networks:
+      - app-network
+
+  oracle-db:
+    build:
+      context: ../
+      dockerfile: ./infrastructure/Oracle.Dockerfile
+    ports:
+      - "1521:1521"
+    environment:
+      - DB_SID=FREE
+      - DB_PASSWD=pass
+      - DB_DOMAIN=my.domain.com
+      - DB_BUNDLE=basic
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    restart: always
+    healthcheck:
+      test: ["CMD", "sqlplus", "-S", "/nolog", "AS SYSDBA", "SELECT 1 FROM DUAL;"]
+      interval: 30s
+      retries: 3
+    networks:
+      - app-network
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: ./infrastructure/Nginx.Dockerfile
+    ports:
+      - "80:80"  # Exposing Nginx on port 80
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+
+
+volumes:
+  backend-data:
+  frontend-data:
+  oracle-data:
+
+networks:
+  app-network:
+    driver: bridge

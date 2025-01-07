@@ -18,11 +18,15 @@ def get_queries():
                   WHERE R.nota > 5 and R.vizibil = 'Y'"
         columns = ["Nume Cititor", "Nota", "Titlu Recenzie", "Titlu Carte"]
     else:
-        query = f"SELECT COUNT(R.id_recenzie) \
-                  FROM RECENZIE R JOIN Carte_Cititor_Recenzie CCR on CCR.id_recenzie = R.id_recenzie \
-                  GROUP BY R.id_recenzie, R.NOTA \
-                  HAVING R.NOTA >5"
-        columns = ["COUNT(R.id_recenzie)"]
+        query = f"SELECT Titlu \
+                  FROM Carte \
+                  WHERE ISBN IN (SELECT C.ISBN \
+                                  FROM Carte C \
+                                  JOIN Carte_Cititor_Recenzie CCR ON CCR.ISBN = C.ISBN \
+                                  JOIN Recenzie R ON CCR.id_recenzie = R.id_recenzie \
+                                  GROUP BY C.ISBN \
+                                  HAVING AVG(R.NOTA) > 8)"
+        columns = ["Titlu"]
 
     connection = queries_bp.connection
     cursor = connection.cursor()

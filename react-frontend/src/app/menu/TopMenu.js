@@ -14,7 +14,7 @@ const TopMenu = () => {
       <Link href="/cereri">
         <button className="menu-button">Cereri</button>
       </Link>
-      <Link href="/section3">
+      <Link href="/views">
         <button className="menu-button">Views</button>
       </Link>
     </div>
