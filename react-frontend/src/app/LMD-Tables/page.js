@@ -20,7 +20,6 @@ export default function LMDTablesPage() {
   const [updateSuccessful, setUpdateSuccessful] = useState(false);
   const [deleteSuccessful, setDeleteSuccessful] = useState(false);
 
-  // Fetching table names
   useEffect(() => {
     const fetchTableNames = async () => {
       try {
@@ -44,7 +43,6 @@ export default function LMDTablesPage() {
     fetchTableNames();
   }, []);
 
-  // Fetching columns
   useEffect(() => {
     if (!selectedTable) return;
 
@@ -69,7 +67,7 @@ export default function LMDTablesPage() {
           throw new Error(`Failed to fetch table columns: ${errorMessage}`);
         }
         const data = await response.json();
-        setPrimaryKeyColumn(data.pk || '');  // Set the primary key column
+        setPrimaryKeyColumn(data.pk || '');
         setColumns(data.coloane || []);
       } catch (error) {
         setError(error.message);
@@ -79,7 +77,6 @@ export default function LMDTablesPage() {
     fetchTableColumns();
   }, [selectedTable]);
 
-  // Fetching table data
   useEffect(() => {
     if (!selectedTable) return;
 
@@ -107,14 +104,12 @@ export default function LMDTablesPage() {
     fetchTableData();
   }, [selectedTable, selectedColumn, sortOrder]);
 
-  // Handling sorting of the table
   const handleSort = (column) => {
     const newSortOrder = selectedColumn === column && sortOrder === "ASC" ? "DESC" : "ASC";
     setSortOrder(newSortOrder);
     setSelectedColumn(column);
   };
 
-  // Handling input changes for editing
   const handleInputChange = (e, rowId, column) => {
     const updatedValue = e.target.value;
     setEditedData((prevEditedData) => {
@@ -131,7 +126,6 @@ export default function LMDTablesPage() {
     });
   };
 
-  // Handling row deletion
   const handleDelete = (rowId) => {
     const rowToDelete = data.find((row) => row[primaryKeyColumn] === rowId);
     if (rowToDelete && !deletedRows.some((row) => row[primaryKeyColumn] === rowId)) {
@@ -145,7 +139,6 @@ export default function LMDTablesPage() {
     }
   };
 
-  // Saving changes (update and delete)
   const saveChanges = async () => {
     try {
       const deletedIds = deletedRows.map((row) => row[primaryKeyColumn]);

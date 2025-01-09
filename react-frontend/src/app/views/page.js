@@ -8,10 +8,10 @@ export default function ViewsPage() {
   const [selectedView, setSelectedView] = useState("");
   const [viewData, setViewData] = useState([]);
   const [modifiedRows, setModifiedRows] = useState({});
+  const [hasBeenModified, setHasBeenModified] = useState({});
   const [newRows, setNewRows] = useState([]);
   const [deletedRows, setDeletedRows] = useState([]);
 
-  // Fetch views list
   useEffect(() => {
     const fetchViews = async () => {
       try {
@@ -25,7 +25,6 @@ export default function ViewsPage() {
     fetchViews();
   }, []);
 
-  // Fetch data for the selected view
   const fetchData = async () => {
     if (selectedView) {
       try {
@@ -35,6 +34,7 @@ export default function ViewsPage() {
         setModifiedRows({});
         setNewRows([]);
         setDeletedRows([]);
+        setHasBeenModified({});
       } catch (error) {
         console.error("Error fetching view data:", error);
       }
@@ -42,12 +42,12 @@ export default function ViewsPage() {
   };
 
   useEffect(() => {
-    fetchData(); // Re-fetch data when the view changes
+    fetchData();
   }, [selectedView]);
 
-  // Handle edit changes
   const handleEditChange = (e, rowIndex, column) => {
-    const value = e.target.value || null; // Allow null values
+    const value = e.target.value;
+
     const originalRow = viewData[rowIndex];
 
     setModifiedRows((prevState) => ({
@@ -62,7 +62,6 @@ export default function ViewsPage() {
     }));
   };
 
-  // Add a new empty row
   const handleAddRow = () => {
     setNewRows((prevState) => [
       ...prevState,
@@ -70,9 +69,8 @@ export default function ViewsPage() {
     ]);
   };
 
-  // Handle new row changes
   const handleNewRowChange = (e, rowIndex, column) => {
-    const value = e.target.value || null; // Allow null values
+    const value = e.target.value;
     setNewRows((prevState) =>
       prevState.map((row, index) =>
         index === rowIndex ? { ...row, [column]: value } : row
@@ -80,7 +78,6 @@ export default function ViewsPage() {
     );
   };
 
-  // Mark a row for deletion
   const handleDelete = (rowIndex) => {
     const rowToDelete = viewData[rowIndex];
     if (rowToDelete) {
@@ -94,10 +91,8 @@ export default function ViewsPage() {
     }
   };
 
-  // Insert new rows
 const handleInsertRows = async () => {
   try {
-    // Remove 'id' from new rows before sending them
     const rowsToInsert = newRows.map(({ id, ...rest }) => rest);
 
     const response = await fetch(`${config.DOCKER_API_BASE_URL}/views/insertViewData`, {
@@ -114,11 +109,10 @@ const handleInsertRows = async () => {
   } catch (error) {
     console.error("Error inserting rows:", error);
   } finally {
-    fetchData(); // Re-fetch the data after the action, regardless of success or failure
+    fetchData();
   }
 };
 
-  // Update modified rows
   const handleUpdateRows = async () => {
     const updates = Object.values(modifiedRows).map(({ original, updated }) => ({
       original,
@@ -140,7 +134,7 @@ const handleInsertRows = async () => {
     } catch (error) {
       console.error("Error updating rows:", error);
     } finally {
-      fetchData(); // Re-fetch the data after the action, regardless of success or failure
+      fetchData();
     }
   };
 
@@ -211,7 +205,13 @@ const handleInsertRows = async () => {
                   <td key={column} style={{ border: "1px solid #ddd", padding: "8px" }}>
                     <input
                       type="text"
-                      value={modifiedRows[rowIndex]?.updated[column] ?? row[column] ?? ""}
+                      value={
+                        modifiedRows[rowIndex]?.updated[column] !== undefined
+                          ? modifiedRows[rowIndex]?.updated[column]
+                          : row[column] === null
+                          ? ""
+                          : row[column] || ""
+                      }
                       onChange={(e) => handleEditChange(e, rowIndex, column)}
                       style={{ backgroundColor: "black", color: "white", padding: "5px" }}
                     />
